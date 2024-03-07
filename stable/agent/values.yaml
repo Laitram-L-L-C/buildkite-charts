@@ -22,6 +22,11 @@ agent:
   # Agent Deployment annotations
   annotations: {}
 
+pvc:
+  enabled: true
+  size: 10Gi
+  storageClassName: "standard"
+
 # Enable mounting the hosts docker socket into the agent container
 enableHostDocker: true
 

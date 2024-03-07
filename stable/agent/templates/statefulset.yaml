@@ -1,5 +1,5 @@
-apiVersion: {{ template "deployment.apiVersion" . }}
-kind: Deployment
+apiVersion: {{ template "statefulset.apiVersion" . }}
+kind: StatefulSet
 metadata:
   name: {{ template "fullname" . }}
   labels:
@@ -12,6 +12,7 @@ metadata:
 {{ toYaml .Values.agent.annotations | indent 4 }}
 {{- end }}
 spec:
+  serviceName: {{ template "fullname" . }}
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
@@ -36,11 +37,15 @@ spec:
 {{ toYaml . | indent 8 }}
 {{- end }}
     spec:
-      serviceAccount: {{ template "fullname" . }}
+      serviceAccountName: {{ template "fullname" . }}
       {{- if .Values.registryCreds.dockerconfigjson }}
       imagePullSecrets:
       - name: {{ template "fullname" . }}-dockerconfigjson
       {{- end }}
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: {{ template "fullname" . }}-pvc
 {{- if .Values.podInitContainers }}
       initContainers:
 {{ toYaml .Values.podInitContainers | nindent 8 }}
@@ -129,7 +134,11 @@ spec:
 {{ toYaml .Values.livenessProbe | indent 12 }}
           resources:
 {{ toYaml .Values.resources | indent 12 }}
+{{- if .Values.pvc.enabled }}
           volumeMounts:
+          - name: data
+            mountPath: "/data"
+{{- end-}}
 {{- if .Values.volumeMounts }}{{ toYaml .Values.volumeMounts | nindent 12 }}{{- end }}
 {{- if .Values.enableHostDocker }}
             - name: var-run-docker-sock
@@ -182,6 +191,9 @@ spec:
 {{- end }}
       terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
       volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: {{ template "fullname" . }}-pvc
 {{- if .Values.volumes }}{{ toYaml .Values.volumes | nindent 8 }}{{- end }}
 {{- if .Values.enableHostDocker }}
         - name: var-run-docker-sock
