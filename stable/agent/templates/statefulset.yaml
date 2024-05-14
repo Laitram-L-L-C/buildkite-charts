@@ -134,8 +134,8 @@ spec:
 {{ toYaml .Values.livenessProbe | indent 12 }}
           resources:
 {{ toYaml .Values.resources | indent 12 }}
-{{- if .Values.pvc.enabled }}
           volumeMounts:
+{{- if .Values.pvc.enabled }}
           - name: data
             mountPath: "/data"
 {{- end-}}
