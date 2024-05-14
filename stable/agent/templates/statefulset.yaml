@@ -12,7 +12,7 @@ metadata:
 {{ toYaml .Values.agent.annotations | indent 4 }}
 {{- end }}
 spec:
-  serviceName: {{ template "fullname" . }}
+  serviceName: {{ template "fullname" . }}-svc
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
@@ -42,10 +42,6 @@ spec:
       imagePullSecrets:
       - name: {{ template "fullname" . }}-dockerconfigjson
       {{- end }}
-      volumes:
-      - name: data
-        persistentVolumeClaim:
-          claimName: {{ template "fullname" . }}-pvc
 {{- if .Values.podInitContainers }}
       initContainers:
 {{ toYaml .Values.podInitContainers | nindent 8 }}
@@ -187,9 +183,6 @@ spec:
 {{- end }}
       terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
       volumes:
-      - name: data
-        persistentVolumeClaim:
-          claimName: {{ template "fullname" . }}-pvc
 {{- if .Values.volumes }}{{ toYaml .Values.volumes | nindent 8 }}{{- end }}
 {{- if .Values.enableHostDocker }}
         - name: var-run-docker-sock
@@ -217,6 +210,11 @@ spec:
           configMap:
             name: {{ template "fullname" . }}-entrypointd
             defaultMode: 0777
+        {{- end }}
+        {{- if .Values.pvc.enabled }}
+        - name: {{ template "fullname" . }}-pvc
+          persistentVolumeClaim:
+            claimName: {{ template "fullname" . }}-pvc
         {{- end }}
     {{- if .Values.nodeSelector }}
       nodeSelector:
