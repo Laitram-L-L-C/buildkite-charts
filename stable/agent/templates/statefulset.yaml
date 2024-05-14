@@ -136,9 +136,9 @@ spec:
 {{ toYaml .Values.resources | indent 12 }}
           volumeMounts:
 {{- if .Values.pvc.enabled }}
-          - name: data
-            mountPath: "/data"
-{{- end-}}
+            - name: data
+              mountPath: "/data"
+{{- end }}
 {{- if .Values.volumeMounts }}{{ toYaml .Values.volumeMounts | nindent 12 }}{{- end }}
 {{- if .Values.enableHostDocker }}
             - name: var-run-docker-sock
