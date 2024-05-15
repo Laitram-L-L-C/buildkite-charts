@@ -165,7 +165,7 @@ spec:
             value: ""
           volumeMounts:
             {{- if .Values.dind.volumeMounts }}{{ toYaml .Values.dind.volumeMounts | nindent 12 }}{{- end }}
-            - name: "docker-graph-storage"
+            - name: docker-data
               mountPath: "/var/lib/docker"
             - name: shared-volume
               mountPath: "/var/buildkite"
@@ -200,8 +200,6 @@ spec:
             secretName: {{ template "fullname" . }}-registry
         {{- end }}
         {{- if .Values.dind.enabled }}
-        - name: docker-graph-storage
-          emptyDir: {}
         - name: shared-volume
           emptyDir: {}
         {{- end }}
@@ -212,9 +210,9 @@ spec:
             defaultMode: 0777
         {{- end }}
         {{- if .Values.pvc.enabled }}
-        - name: {{ template "fullname" . }}-pvc
+        - name: docker-data
           persistentVolumeClaim:
-            claimName: {{ template "fullname" . }}-pvc
+            claimName: docker-data
         {{- end }}
     {{- if .Values.nodeSelector }}
       nodeSelector:
@@ -227,4 +225,15 @@ spec:
     {{- if .Values.affinity }}
       affinity:
 {{ toYaml .Values.affinity | indent 8 }}
+    {{- end }}
+{{- if .Values.pvc.enabled }}
+  volumeClaimTemplates:
+    - metadata:
+        name: docker-data
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: {{ .Values.pvc.storageClassName }}
+        resources:
+          requests:
+            storage: {{ .Values.pvc.size }}
     {{- end }}
