@@ -199,10 +199,6 @@ spec:
           secret:
             secretName: {{ template "fullname" . }}-registry
         {{- end }}
-        {{- if .Values.dind.enabled }}
-        - name: shared-volume
-          emptyDir: {}
-        {{- end }}
         {{- if .Values.entrypointd }}
         - name: entrypointd
           configMap:
@@ -236,4 +232,12 @@ spec:
         resources:
           requests:
             storage: {{ .Values.pvc.size }}
+    - metadata:
+        name: shared-volume
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: {{ .Values.pvc.storageClassName }}
+        resources:
+          requests:
+            storage: 5Gi
     {{- end }}
