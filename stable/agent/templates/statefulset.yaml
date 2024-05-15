@@ -205,7 +205,7 @@ spec:
             name: {{ template "fullname" . }}-entrypointd
             defaultMode: 0777
         {{- end }}
-        {{- if .Values.dind.pvc.enabled }}
+        {{- if .Values.pvc.enabled }}
         - name: docker-data
           persistentVolumeClaim:
             claimName: docker-data
@@ -222,21 +222,21 @@ spec:
       affinity:
 {{ toYaml .Values.affinity | indent 8 }}
     {{- end }}
-{{- if .Values.dind.pvc.enabled }}
+{{- if .Values.pvc.enabled }}
   volumeClaimTemplates:
     - metadata:
         name: docker-data
       spec:
         accessModes: [ "ReadWriteOnce" ]
-        storageClassName: {{ .Values.dind.pvc.storageClassName }}
+        storageClassName: {{ .Values.pvc.storageClassName }}
         resources:
           requests:
-            storage: {{ .Values.dind.pvc.size }}
+            storage: {{ .Values.pvc.size }}
     - metadata:
         name: shared-volume
       spec:
         accessModes: [ "ReadWriteOnce" ]
-        storageClassName: {{ .Values.dind.pvc.storageClassName }}
+        storageClassName: {{ .Values.pvc.storageClassName }}
         resources:
           requests:
             storage: 5Gi
