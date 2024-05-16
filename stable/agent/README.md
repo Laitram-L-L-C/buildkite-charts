@@ -1,3 +1,24 @@
+# Build and Run at intralox
+
+To test when you are working on this that it will build correct yaml 
+
+`helm template buildkite . --values values.yaml --output-dir ./output`
+
+When you are ready to release: 
+
+- bump the `version` in `Chart.yaml` 
+
+- package the chart: 
+
+`helm package stable/agent/`
+
+- Upload it to our helmrepostiory
+
+`curl -ubuild_automation:"$pass" -T agent-$version.tgz "https://artifactory.intralox.com/artifactory/intralox-helm/agent-$version.tgz"` - creds are in 1password WAG vault
+
+- PR into main
+- Cut a release with the same # as the version
+
 # Running Buildkite agent
 
 The [buildkite agent](https://buildkite.com/docs/agent) is a small, reliable and cross-platform build runner that makes it easy to run automated builds on your own infrastructure. Its main responsibilities are polling buildkite.com for work, running build jobs, reporting back the status code and output log of the job, and uploading the job's artifacts.

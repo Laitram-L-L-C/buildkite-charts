@@ -231,7 +231,7 @@ spec:
         storageClassName: {{ .Values.pvc.storageClassName }}
         resources:
           requests:
-            storage: {{ .Values.pvc.size }}
+            storage: {{ .Values.pvc.dockerVolSize }}
     - metadata:
         name: shared-volume
       spec:
@@ -239,5 +239,5 @@ spec:
         storageClassName: {{ .Values.pvc.storageClassName }}
         resources:
           requests:
-            storage: 5Gi
+            storage: {{ .Values.pvc.repoVolSize }}
     {{- end }}
