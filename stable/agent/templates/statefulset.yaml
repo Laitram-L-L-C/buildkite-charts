@@ -1,4 +1,4 @@
-apiVersion: {{ template "statefulset.apiVersion" . }}
+apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: {{ template "fullname" . }}
@@ -12,7 +12,7 @@ metadata:
 {{ toYaml .Values.agent.annotations | indent 4 }}
 {{- end }}
 spec:
-  serviceName: {{ template "fullname" . }}
+  serviceName: {{ template "fullname" . }}-svc
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
@@ -42,10 +42,6 @@ spec:
       imagePullSecrets:
       - name: {{ template "fullname" . }}-dockerconfigjson
       {{- end }}
-      volumes:
-      - name: data
-        persistentVolumeClaim:
-          claimName: {{ template "fullname" . }}-pvc
 {{- if .Values.podInitContainers }}
       initContainers:
 {{ toYaml .Values.podInitContainers | nindent 8 }}
@@ -134,11 +130,7 @@ spec:
 {{ toYaml .Values.livenessProbe | indent 12 }}
           resources:
 {{ toYaml .Values.resources | indent 12 }}
-{{- if .Values.pvc.enabled }}
           volumeMounts:
-          - name: data
-            mountPath: "/data"
-{{- end-}}
 {{- if .Values.volumeMounts }}{{ toYaml .Values.volumeMounts | nindent 12 }}{{- end }}
 {{- if .Values.enableHostDocker }}
             - name: var-run-docker-sock
@@ -173,7 +165,7 @@ spec:
             value: ""
           volumeMounts:
             {{- if .Values.dind.volumeMounts }}{{ toYaml .Values.dind.volumeMounts | nindent 12 }}{{- end }}
-            - name: "docker-graph-storage"
+            - name: docker-data
               mountPath: "/var/lib/docker"
             - name: shared-volume
               mountPath: "/var/buildkite"
@@ -191,9 +183,6 @@ spec:
 {{- end }}
       terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
       volumes:
-      - name: data
-        persistentVolumeClaim:
-          claimName: {{ template "fullname" . }}-pvc
 {{- if .Values.volumes }}{{ toYaml .Values.volumes | nindent 8 }}{{- end }}
 {{- if .Values.enableHostDocker }}
         - name: var-run-docker-sock
@@ -210,17 +199,16 @@ spec:
           secret:
             secretName: {{ template "fullname" . }}-registry
         {{- end }}
-        {{- if .Values.dind.enabled }}
-        - name: docker-graph-storage
-          emptyDir: {}
-        - name: shared-volume
-          emptyDir: {}
-        {{- end }}
         {{- if .Values.entrypointd }}
         - name: entrypointd
           configMap:
             name: {{ template "fullname" . }}-entrypointd
             defaultMode: 0777
+        {{- end }}
+        {{- if .Values.pvc.enabled }}
+        - name: docker-data
+          persistentVolumeClaim:
+            claimName: docker-data
         {{- end }}
     {{- if .Values.nodeSelector }}
       nodeSelector:
@@ -233,4 +221,23 @@ spec:
     {{- if .Values.affinity }}
       affinity:
 {{ toYaml .Values.affinity | indent 8 }}
+    {{- end }}
+{{- if .Values.pvc.enabled }}
+  volumeClaimTemplates:
+    - metadata:
+        name: docker-data
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: {{ .Values.pvc.storageClassName }}
+        resources:
+          requests:
+            storage: {{ .Values.pvc.size }}
+    - metadata:
+        name: shared-volume
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: {{ .Values.pvc.storageClassName }}
+        resources:
+          requests:
+            storage: 5Gi
     {{- end }}

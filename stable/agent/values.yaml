@@ -25,7 +25,7 @@ agent:
 pvc:
   enabled: true
   size: 10Gi
-  storageClassName: "standard"
+  storageClassName: "gp2"
 
 # Enable mounting the hosts docker socket into the agent container
 enableHostDocker: true
